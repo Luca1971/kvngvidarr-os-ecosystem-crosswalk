@@ -182,20 +182,24 @@
         var t = setInterval(function () {
           n++;
           if (typeof React !== 'undefined' && typeof ReactDOM !== 'undefined') {
-            clearInterval(t); cb();
+            clearInterval(t);
+            cb();
           } else if (n > 100) {
             clearInterval(t);
             showErr('React/ReactDOM failed to load from CDN');
           }
         }, 50);
       }
+      var PARTS = ['app.chunk00.js','app.chunk01.js','app.chunk02.js','app.chunk03.js','app.chunk04.js','app.chunk05.js','app.chunk06.js','app.chunk07.js','app.chunk08.js','app.chunk09.js'];
       whenReady(function () {
-        fetch('https://litter.catbox.moe/rotvbo.js').then(function (r) {
-          if (!r.ok) throw new Error('Failed to load app.js (' + r.status + ')');
-          return r.text();
-        }).then(function (code) {
+        Promise.all(PARTS.map(function (p) {
+          return fetch(p).then(function (r) {
+            if (!r.ok) throw new Error('Failed to load ' + p + ' (' + r.status + ')');
+            return r.text();
+          });
+        })).then(function (chunks) {
           var s = document.createElement('script');
-          s.textContent = code;
+          s.textContent = chunks.join('');
           document.body.appendChild(s);
         }).catch(showErr);
       });
