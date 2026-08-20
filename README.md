@@ -1,72 +1,106 @@
 # KVNGVIDARR OS — Ecosystem Crosswalk
 
-## Deliverable
-
 Single self-contained HTML application (`index.html`) implementing the Ecosystem Crosswalk dashboard.
 
-## How to run
-
-Open `index.html` in any modern browser (Chrome, Firefox, Edge, Safari).
-
-No build step, no server, no backend required for the mock provider.
+**Commit baseline (live provider):** `8327f92ad9012b05fa40c7630a54944ff379a6b5`
 
 ## Architecture
 
 ```
 UI (tabs + components)
  ↓
-Domain Data Interface (getLiquiditySources, getTradingCapitalState, …)
+Domain Data Interface
  ↓
 ┌─────────────────────┬──────────────────────┐
 │ MockProvider        │ SupabaseProvider     │
-│ (active by default) │ (stub ready)         │
-│ DEVELOPMENT         │ PRODUCTION (later)   │
+│ (fallback)          │ (active when key set)│
+│ DEVELOPMENT         │ PRODUCTION           │
 └─────────────────────┴──────────────────────┘
 ```
 
-- Presentation layer never imports table names or raw fetch logic.
-- Mock provider supplies the 2026-08-20 snapshot reference data.
-- Supabase provider maps to the verified table names and is ready for `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` (or `window.__SUPABASE_URL__` / `window.__SUPABASE_ANON_KEY__`).
+Active selection in `index.html`:
 
-## Tabs preserved
+```js
+const PROVIDER = _creds.anonKey ? createSupabaseProvider() : mockProvider();
+```
 
-1. Command Center
-2. Liquidity
-3. Trading
-4. Domains
-5. LLM OS
+## How to run (mock)
 
-## Visual system
+Open `index.html` in any modern browser. No build step. Mock data is used when no anon key is present.
 
-- Near-black background, warm off-white text, gold accent
-- Space Grotesk + JetBrains Mono
-- Status pills (VERIFIED / PROVISIONAL / EMPTY / ERROR / MOCK)
-- Responsive cards + horizontally scrollable tables
+## How to activate LIVE Supabase
 
-## Key invariants enforced in UI
+1. Obtain the **publishable / anon** key from the Supabase project  
+   `cywvlgwwsvtftylggehv` → Settings → API → `anon` `public`.
+2. **Never** use the `service_role` key in the browser.
+3. Before the app script runs, set:
 
-- No cross-currency aggregation without verified conversion (BMI USD excluded from NGN totals)
-- Equity ≠ liquidity
-- Empty structured state shown as “EMPTY IN STRUCTURED STATE”, never “INACTIVE”
-- Allocation total validated (100% = VALID, otherwise INVALID)
-- Trading executions ≠ observations ≠ validations
-- LLM capability evidence states: VERIFIED-CALLABLE / VERIFIED-AVAILABLE / UNVERIFIED / NOT AVAILABLE
-- DISTRIBUTED_OS_RECONSTRUCTION_INVARIANT surface
-- Known baseline defect (boot contract blind spot on memory protocol) rendered as PROVISIONAL/OPEN
+```html
+<script>
+  window.__SUPABASE_URL__ = 'https://cywvlgwwsvtftylggehv.supabase.co'; // optional, already defaulted
+  window.__SUPABASE_ANON_KEY__ = 'YOUR_PUBLISHABLE_ANON_KEY';
+</script>
+```
 
-## Swapping to live Supabase
+4. Open `index.html`. The header should show **LIVE SUPABASE** instead of **DEVELOPMENT / MOCK STATE**.
+5. Empty canonical tables must remain **EMPTY IN STRUCTURED STATE**. Failures surface as `QUERY_FAILED (table_name): …` — mock data is not substituted.
 
-1. Replace `const PROVIDER = mockProvider();` with a configured `createSupabaseProvider({ url, anonKey })`.
-2. Implement the real `supabase-js` queries inside the provider methods (table names already mapped).
-3. Never place service_role or secrets in the frontend.
+### Safe ways to supply the key (do not commit secrets)
 
-## Validation checklist (mock)
+- Local: inject the script tag above when opening the file, or use a local-only override HTML that loads the committed `index.html` and sets the key.
+- GitHub Pages / static host: use a build-time env injection or a separate non-committed config that is never pushed. The anon key is public-by-design (protected by RLS) but still should not be hard-coded into a committed source file if you prefer rotation hygiene.
 
-- All five tabs render
-- Mock data populates every important panel
-- Empty content/marketing states display correctly
-- Allocation shows VALID 100%
-- Gap month shows PROVISIONAL_GAP with correct NGN figures
-- Trading capital, executions, observations, validations distinct
-- LLM protocol + boot manifest + blind-spot warning present
-- Responsive layout works on narrow viewports
+## Tables queried by the live provider
+
+| Domain | Table |
+|--------|--------|
+| Liquidity | `liquidity_source_definitions` |
+| Liquidity | `financial_liquidity_allocation_policies` |
+| Liquidity | `liquidity_source_classifications` |
+| Liquidity | `liquidity_gap_months` |
+| Liquidity | `liquidity_quarterly_gap_schedule` |
+| Liquidity | `liquidity_inflows` |
+| Liquidity | `financial_liquidity_source_cycle_reconciliation` |
+| Liquidity | `liquidity_trading_funding_links` |
+| Trading | `trading_accounts` |
+| Trading | `trading_capital_state` |
+| Trading | `trading_execution_events` |
+| Trading | `trading_observations` |
+| Trading | `trading_validations` |
+| Domains | `os_business_domains` |
+| Domains | `music_audience_measurements` |
+| Domains | `music_retention_measurements` |
+| Domains | `content_assets` |
+| Domains | `marketing_campaigns` |
+| Domains | `marketing_spend` |
+| Domains | `creative_projects` |
+| LLM OS | `llm_capability_registry` |
+| LLM OS | `llm_memory_operations_protocol` |
+| LLM OS | `llm_routing_rules` |
+| LLM OS | `llm_handoff_rules` |
+| LLM OS | `llm_specialization_registry` |
+| LLM OS | `llm_system_boot_manifest` |
+
+## Tabs
+
+1. Command Center  
+2. Liquidity  
+3. Trading  
+4. Domains  
+5. LLM OS  
+
+## Invariants enforced in UI
+
+- No cross-currency aggregation without verified conversion  
+- Equity ≠ liquidity  
+- Empty structured state → “EMPTY IN STRUCTURED STATE” (never INACTIVE)  
+- Allocation total validated (100% = VALID)  
+- Executions ≠ observations ≠ validations  
+- DISTRIBUTED_OS_RECONSTRUCTION_INVARIANT surface  
+
+## Security
+
+- Browser uses **only** the publishable/anon key.  
+- No service_role key in source or runtime.  
+- RLS is not disabled by this application.  
+- If a table returns RLS denial, the UI shows `QUERY_FAILED` for that table only.
