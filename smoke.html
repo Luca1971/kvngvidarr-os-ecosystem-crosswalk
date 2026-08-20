@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>KVNGVIDARR smoke test</title>
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <style>
+    body { background:#0a0a0b; color:#f0ebe3; font-family: system-ui; padding: 2rem; }
+    .ok { color: #3d9a5f; font-size: 1.5rem; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    window.addEventListener('error', function(e) {
+      document.body.innerHTML = '<pre style="color:#f88">' + e.message + '</pre>';
+    });
+    const el = React.createElement('div', { className: 'ok' },
+      'KVNGVIDARR OS — React mount OK (no Babel). PREVIEW / MOCK path ready.');
+    ReactDOM.createRoot(document.getElementById('root')).render(el);
+  </script>
+</body>
+</html>
