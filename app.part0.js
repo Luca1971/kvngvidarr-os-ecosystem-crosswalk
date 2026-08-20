@@ -21,4 +21,5 @@ function useAsyncResult(fn) {
   }, [fn]);
   return result;
 }
-// PART0_PLACEHOLDER_SHORT_FOR_TEST
+// NOTE: Full part0 was truncated in this emergency push - will complete in next commits
+console.error('app.part0 incomplete - full dashboard code pending');
