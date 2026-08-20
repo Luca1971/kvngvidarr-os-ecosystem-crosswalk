@@ -170,18 +170,34 @@
       el.textContent = (el.textContent ? el.textContent + '\n' : '') + (e.message || e) + (e.filename ? ('\n' + e.filename + ':' + e.lineno) : '');
     });
     (function () {
-      fetch('https://litter.catbox.moe/rotvbo.js').then(function (r) {
-        if (!r.ok) throw new Error('Failed to load app.js (' + r.status + ')');
-        return r.text();
-      }).then(function (code) {
-        var s = document.createElement('script');
-        s.textContent = code;
-        document.body.appendChild(s);
-      }).catch(function (err) {
+      function showErr(err) {
         var el = document.createElement('pre');
         el.style.cssText = 'color:#f88;background:#1a0a0a;padding:16px;margin:16px;font-family:monospace;white-space:pre-wrap;';
-        el.textContent = String(err);
+        el.textContent = String(err && err.stack ? err.stack : err);
         document.body.prepend(el);
+      }
+      function whenReady(cb) {
+        if (typeof React !== 'undefined' && typeof ReactDOM !== 'undefined') return cb();
+        var n = 0;
+        var t = setInterval(function () {
+          n++;
+          if (typeof React !== 'undefined' && typeof ReactDOM !== 'undefined') {
+            clearInterval(t); cb();
+          } else if (n > 100) {
+            clearInterval(t);
+            showErr('React/ReactDOM failed to load from CDN');
+          }
+        }, 50);
+      }
+      whenReady(function () {
+        fetch('https://litter.catbox.moe/rotvbo.js').then(function (r) {
+          if (!r.ok) throw new Error('Failed to load app.js (' + r.status + ')');
+          return r.text();
+        }).then(function (code) {
+          var s = document.createElement('script');
+          s.textContent = code;
+          document.body.appendChild(s);
+        }).catch(showErr);
       });
     })();
   </script>
