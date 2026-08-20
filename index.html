@@ -10,6 +10,7 @@
   <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
   <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
   <style>
     :root {
       --bg-primary: #0a0a0b;
@@ -177,20 +178,20 @@
         document.body.prepend(el);
       }
       function whenReady(cb) {
-        if (typeof React !== 'undefined' && typeof ReactDOM !== 'undefined') return cb();
+        if (typeof React !== 'undefined' && typeof ReactDOM !== 'undefined' && typeof pako !== 'undefined') return cb();
         var n = 0;
         var t = setInterval(function () {
           n++;
-          if (typeof React !== 'undefined' && typeof ReactDOM !== 'undefined') {
+          if (typeof React !== 'undefined' && typeof ReactDOM !== 'undefined' && typeof pako !== 'undefined') {
             clearInterval(t);
             cb();
-          } else if (n > 100) {
+          } else if (n > 120) {
             clearInterval(t);
-            showErr('React/ReactDOM failed to load from CDN');
+            showErr('React/ReactDOM/pako failed to load from CDN');
           }
         }, 50);
       }
-      var PARTS = ['app.chunk00.js','app.chunk01.js','app.chunk02.js','app.chunk03.js','app.chunk04.js','app.chunk05.js','app.chunk06.js','app.chunk07.js','app.chunk08.js','app.chunk09.js','app.chunk10.js'];
+      var PARTS = ['app.b64.00','app.b64.01','app.b64.02','app.b64.03','app.b64.04','app.b64.05','app.b64.06','app.b64.07','app.b64.08'];
       whenReady(function () {
         Promise.all(PARTS.map(function (p) {
           return fetch(p).then(function (r) {
@@ -198,8 +199,13 @@
             return r.text();
           });
         })).then(function (chunks) {
+          var b64 = chunks.join('').replace(/\s/g, '');
+          var bin = atob(b64);
+          var bytes = new Uint8Array(bin.length);
+          for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          var code = pako.ungzip(bytes, { to: 'string' });
           var s = document.createElement('script');
-          s.textContent = chunks.join('');
+          s.textContent = code;
           document.body.appendChild(s);
         }).catch(showErr);
       });
