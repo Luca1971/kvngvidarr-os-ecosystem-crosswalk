@@ -81,13 +81,13 @@
     nav.tabs {
       display: flex; gap: 0.25rem; padding: 0.5rem 1rem;
       background: var(--bg-secondary); border-bottom: 1px solid var(--border);
-      overflow-x: auto;
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
     }
     nav.tabs button {
       font-family: var(--font-sans); font-size: 0.8rem; font-weight: 500;
       padding: 0.5rem 1rem; border: none; background: transparent;
       color: var(--text-secondary); cursor: pointer; border-radius: 6px;
-      white-space: nowrap;
+      white-space: nowrap; transition: all 0.15s ease;
     }
     nav.tabs button:hover { color: var(--text-primary); background: var(--bg-elevated); }
     nav.tabs button.active { color: var(--accent-gold); background: rgba(201, 162, 39, 0.12); }
@@ -124,6 +124,7 @@
     }
     td { font-family: var(--font-mono); color: var(--text-primary); }
     tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
     .mono { font-family: var(--font-mono); }
     .muted { color: var(--text-muted); }
     .gold { color: var(--accent-gold); }
@@ -148,6 +149,11 @@
       font-size: 0.7rem; color: var(--text-muted); text-align: center;
       background: var(--bg-secondary);
     }
+    @media (max-width: 640px) {
+      main { padding: 0.85rem; }
+      .card-value { font-size: 1.15rem; }
+      nav.tabs button { padding: 0.45rem 0.75rem; font-size: 0.75rem; }
+    }
   </style>
 </head>
 <body>
@@ -164,19 +170,16 @@
       el.textContent = (el.textContent ? el.textContent + '\n' : '') + (e.message || e) + (e.filename ? ('\n' + e.filename + ':' + e.lineno) : '');
     });
     (function () {
-      var parts = ['app.part0.js', 'app.part1.js', 'app.part2.js', 'app.part3.js'];
-      Promise.all(parts.map(function (p) {
-        return fetch(p).then(function (r) {
-          if (!r.ok) throw new Error('Failed to load ' + p + ' (' + r.status + ')');
-          return r.text();
-        });
-      })).then(function (chunks) {
+      fetch('app.js').then(function (r) {
+        if (!r.ok) throw new Error('Failed to load app.js (' + r.status + ')');
+        return r.text();
+      }).then(function (code) {
         var s = document.createElement('script');
-        s.textContent = chunks.join('');
+        s.textContent = code;
         document.body.appendChild(s);
       }).catch(function (err) {
         var el = document.createElement('pre');
-        el.style.cssText = 'color:#f88;background:#1a0a0a;padding:16px;margin:16px;';
+        el.style.cssText = 'color:#f88;background:#1a0a0a;padding:16px;margin:16px;font-family:monospace;';
         el.textContent = String(err);
         document.body.prepend(el);
       });
