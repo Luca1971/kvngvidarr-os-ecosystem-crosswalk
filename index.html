@@ -1,1 +1,175 @@
-PLACEHOLDER
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KVNGVIDARR OS — Ecosystem Crosswalk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <style>
+    :root {
+      --bg-primary: #0a0a0b;
+      --bg-secondary: #121214;
+      --bg-card: #161618;
+      --bg-elevated: #1c1c1f;
+      --border: #2a2a2e;
+      --border-subtle: #222226;
+      --text-primary: #f0ebe3;
+      --text-secondary: #a39e94;
+      --text-muted: #6b6760;
+      --accent-gold: #c9a227;
+      --accent-gold-dim: #9a7b1a;
+      --positive: #3d9a5f;
+      --warning: #d4a017;
+      --negative: #c45c3e;
+      --info: #4a8fc7;
+      --font-sans: 'Space Grotesk', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    #root { min-height: 100vh; display: flex; flex-direction: column; }
+    .app-header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .brand { display: flex; align-items: center; gap: 0.75rem; }
+    .brand-mark {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dim));
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.85rem; color: #0a0a0b;
+    }
+    .brand-text h1 { font-size: 1.05rem; font-weight: 600; letter-spacing: 0.02em; }
+    .brand-text p { font-size: 0.7rem; color: var(--text-secondary); letter-spacing: 0.08em; text-transform: uppercase; }
+    .status-bar { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .pill {
+      font-family: var(--font-mono); font-size: 0.65rem;
+      padding: 0.25rem 0.55rem; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--bg-elevated);
+      color: var(--text-secondary); letter-spacing: 0.04em;
+      text-transform: uppercase; white-space: nowrap;
+    }
+    .pill.live { border-color: var(--positive); color: var(--positive); }
+    .pill.mock { border-color: var(--warning); color: var(--warning); }
+    .pill.provisional { border-color: var(--warning); color: var(--warning); }
+    .pill.verified { border-color: var(--positive); color: var(--positive); }
+    .pill.error { border-color: var(--negative); color: var(--negative); }
+    .pill.empty { border-color: var(--text-muted); color: var(--text-muted); }
+    .pill.info { border-color: var(--info); color: var(--info); }
+    nav.tabs {
+      display: flex; gap: 0.25rem; padding: 0.5rem 1rem;
+      background: var(--bg-secondary); border-bottom: 1px solid var(--border);
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+    }
+    nav.tabs button {
+      font-family: var(--font-sans); font-size: 0.8rem; font-weight: 500;
+      padding: 0.5rem 1rem; border: none; background: transparent;
+      color: var(--text-secondary); cursor: pointer; border-radius: 6px;
+      white-space: nowrap; transition: all 0.15s ease;
+    }
+    nav.tabs button:hover { color: var(--text-primary); background: var(--bg-elevated); }
+    nav.tabs button.active { color: var(--accent-gold); background: rgba(201, 162, 39, 0.12); }
+    main { flex: 1; padding: 1.25rem; max-width: 1400px; margin: 0 auto; width: 100%; }
+    .section-title {
+      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-secondary);
+      margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;
+    }
+    .grid { display: grid; gap: 1rem; }
+    .grid-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1rem 1.15rem;
+      display: flex; flex-direction: column; gap: 0.5rem;
+    }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; }
+    .card-label { font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; }
+    .card-value { font-family: var(--font-mono); font-size: 1.35rem; font-weight: 600; color: var(--text-primary); }
+    .card-value.gold { color: var(--accent-gold); }
+    .card-value.positive { color: var(--positive); }
+    .card-value.negative { color: var(--negative); }
+    .card-value.warning { color: var(--warning); }
+    .card-sub { font-size: 0.75rem; color: var(--text-secondary); }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-card); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; min-width: 600px; }
+    th, td { padding: 0.65rem 0.9rem; text-align: left; border-bottom: 1px solid var(--border-subtle); }
+    th {
+      font-weight: 500; color: var(--text-muted); font-size: 0.7rem;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      background: var(--bg-elevated); position: sticky; top: 0;
+    }
+    td { font-family: var(--font-mono); color: var(--text-primary); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    .mono { font-family: var(--font-mono); }
+    .muted { color: var(--text-muted); }
+    .gold { color: var(--accent-gold); }
+    .alert {
+      padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid;
+      font-size: 0.8rem; display: flex; gap: 0.75rem; align-items: flex-start;
+    }
+    .alert.warning { background: rgba(212, 160, 23, 0.08); border-color: var(--warning); color: var(--warning); }
+    .alert.error { background: rgba(196, 92, 62, 0.08); border-color: var(--negative); color: var(--negative); }
+    .alert.info { background: rgba(74, 143, 199, 0.08); border-color: var(--info); color: var(--info); }
+    .alert.empty { background: rgba(107, 103, 96, 0.08); border-color: var(--text-muted); color: var(--text-muted); }
+    .stack { display: flex; flex-direction: column; gap: 1.25rem; }
+    .row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+    .provenance { font-size: 0.65rem; color: var(--text-muted); font-family: var(--font-mono); }
+    .invariant-box {
+      background: var(--bg-elevated); border: 1px dashed var(--accent-gold-dim);
+      border-radius: 8px; padding: 1rem; font-size: 0.8rem; color: var(--text-secondary);
+    }
+    .invariant-box strong { color: var(--accent-gold); }
+    footer {
+      padding: 1rem 1.25rem; border-top: 1px solid var(--border);
+      font-size: 0.7rem; color: var(--text-muted); text-align: center;
+      background: var(--bg-secondary);
+    }
+    @media (max-width: 640px) {
+      main { padding: 0.85rem; }
+      .card-value { font-size: 1.15rem; }
+      nav.tabs button { padding: 0.45rem 0.75rem; font-size: 0.75rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    window.addEventListener('error', function (e) {
+      var el = document.getElementById('boot-error');
+      if (!el) {
+        el = document.createElement('pre');
+        el.id = 'boot-error';
+        el.style.cssText = 'color:#f88;background:#1a0a0a;padding:16px;margin:16px;white-space:pre-wrap;font-family:monospace;z-index:9999;position:relative;';
+        document.body.prepend(el);
+      }
+      el.textContent = (el.textContent ? el.textContent + '\n' : '') + (e.message || e) + (e.filename ? ('\n' + e.filename + ':' + e.lineno) : '');
+    });
+  </script>
+  <script src="app.js"></script>
+</body>
+</html>
